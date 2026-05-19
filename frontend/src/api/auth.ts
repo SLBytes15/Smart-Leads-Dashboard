@@ -15,6 +15,6 @@ export const loginUser = async (
     email:string,
     password: string
 ): Promise<AuthResponse> => {
-    const res = await api.post('/login', {email,password})
+    const res = await api.post('/auth/login', {email,password})
     return res.data.data;
 }

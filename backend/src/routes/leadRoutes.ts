@@ -5,6 +5,7 @@ import {
   getLeadById,
   updateLead,
   deleteLead,
+  exportLeads,
 } from "../controllers/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -15,7 +16,10 @@ router.use(protect);
 
 router.route("/").get(getLeads).post(createLead);
 
+router.get('/export', exportLeads);
 
 router.route("/:id").get(getLeadById).put(updateLead).delete(deleteLead);
+
+
 
 export default router;

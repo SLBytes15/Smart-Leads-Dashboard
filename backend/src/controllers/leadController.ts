@@ -3,6 +3,7 @@ import Lead from "../models/Lead";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { sendSuccess, sendError } from "../utils/apiResponse";
 import { LeadStatus, LeadSource } from "../types";
+import { generateCSV } from "../utils/csvExport";
 
 // ─── CREATE LEAD ─────────────────────────────────────────
 export const createLead = async (
@@ -198,5 +199,54 @@ export const deleteLead = async (
     sendSuccess(res, null, "Lead deleted successfully");
   } catch (error) {
     sendError(res, "Failed to delete lead", 500);
+  }
+};
+
+
+export const exportLeads = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { status, source, search } = req.query;
+
+    // Same filter logic as getLeads
+    const filter: Record<string, unknown> = {};
+
+    if (req.user?.role !== "admin") {
+      filter.createdBy = req.user?.id;
+    }
+
+    if (status && status !== "all") {
+      filter.status = status as LeadStatus;
+    }
+
+    if (source && source !== "all") {
+      filter.source = source as LeadSource;
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const leads = await Lead.find(filter).sort({ createdAt: -1 });
+
+    if (leads.length === 0) {
+      sendError(res, "No leads found to export", 404);
+      return;
+    }
+
+    // Generate CSV string
+    const csv = generateCSV(leads);
+
+    // Set headers to trigger file download in browser
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=leads.csv");
+    res.status(200).send(csv);
+  } catch (error) {
+    sendError(res, "Failed to export leads", 500);
   }
 };
