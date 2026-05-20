@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const leadController_1 = require("../controllers/leadController");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const router = (0, express_1.Router)();
+router.use(authMiddleware_1.protect);
+router.route("/").get(leadController_1.getLeads).post(leadController_1.createLead);
+router.get('/export', leadController_1.exportLeads);
+router.route("/:id").get(leadController_1.getLeadById).put(leadController_1.updateLead).delete(leadController_1.deleteLead);
+exports.default = router;
